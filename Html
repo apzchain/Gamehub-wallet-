@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APZ Dashboard</title>
+  <style>
+    body {
+      background: #0d0d1a;
+      color: #fff;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      direction: rtl;
+    }
+    header {
+      background: #4b2ca0;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.5em;
+      font-weight: bold;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(75, 44, 160, 0.4);
+    }
+    main {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    .card {
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2a2a44;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+    .card h2 {
+      margin-top: 0;
+      color: #b39bf0;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 14px 30px;
+      background: #6a3fd9;
+      color: #fff;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.3s;
+      border: none;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    .btn:hover {
+      background: #8a5ff0;
+      transform: scale(1.03);
+      box-shadow: 0 0 20px #6a3fd9aa;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    li {
+      background: #22223b;
+      margin: 8px 0;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border-right: 4px solid #6a3fd9;
+    }
+    li small {
+      color: #aaa;
+      display: block;
+      margin-top: 5px;
+      font-size: 0.8em;
+    }
+    #version {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #c4b5fd;
+      margin: 5px 0;
+    }
+    #changelog {
+      background: #0d0d1a;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      color: #cdd;
+    }
+    .status-badge {
+      display: inline-block;
+      background: #22c55e;
+      color: #000;
+      padding: 2px 12px;
+      border-radius: 20px;
+      font-size: 0.7em;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>🚀 داشبورد آنلاین APZ / GameWallet</header>
+  <main>
+    <div class="card">
+      <h2>📦 آخرین نسخه <span class="status-badge">پایدار</span></h2>
+      <p id="version">در حال دریافت...</p>
+      <p id="changelog"></p>
+      <a id="download" class="btn" href="#">⬇️ دانلود و نصب APK</a>
+    </div>
+
+    <div class="card">
+      <h2>📢 اعلان‌ها و اخبار</h2>
+      <ul id="news"></ul>
+    </div>
+  </main>
+
+  <script>
+    // ---------- داده‌های پشتیبان (آفلاین / پیش‌فرض) ----------
+    const FALLBACK_DATA = {
+      version: "v1.0.0",
+      changelog: "✅ انتشار رسمی نسخه‌ی اولیه\n🔒 بهبود امنیت داخلی\n🐛 رفع باگ‌های گزارش‌شده",
+      apk: "https://github.com/APZ-CHAIN/GameWallet/releases/download/v1.0.0/app-release.apk"
+    };
+
+    const FALLBACK_NEWS = [
+      { title: "🎉 شروع به کار", message: "داشبورد رسمی پروژه APZ راه‌اندازی شد.", date: "۱۴۰۴/۰۶/۰۶" },
+      { title: "⚡ نسخه ۱.۰.۰ منتشر شد", message: "اولین نسخه‌ی پایدار GameWallet در دسترس است.", date: "۱۴۰۴/۰۶/۰۵" }
+    ];
+
+    // ---------- تابع بارگذاری نسخه ----------
+    async function loadLatest() {
+      const versionEl = document.getElementById("version");
+      const changelogEl = document.getElementById("changelog");
+      const downloadBtn = document.getElementById("download");
+
+      try {
+        const res = await fetch("https://apz-chain.github.io/downloads/latest.json");
+        if (!res.ok) throw new Error("Network error");
+        const data = await res.json();
+        
+        versionEl.innerText = "نسخه: " + (data.version || FALLBACK_DATA.version);
+        changelogEl.innerText = "🔹 تغییرات: " + (data.changelog || FALLBACK_DATA.changelog);
+        downloadBtn.href = data.apk || FALLBACK_DATA.apk;
+      } catch (e) {
+        // در صورت خطا، داده‌های پیش‌فرض را نمایش بده
+        versionEl.innerText = "نسخه: " + FALLBACK_DATA.version;
+        changelogEl.innerText = "🔹 تغییرات: " + FALLBACK_DATA.changelog;
+        downloadBtn.href = FALLBACK_DATA.apk;
+        console.warn("استفاده از داده‌های پشتیبان (نتوانست به JSON دسترسی پیدا کند)");
+      }
+    }
+
+    // ---------- تابع بارگذاری اخبار ----------
+    async function loadNews() {
+      const newsList = document.getElementById("news");
+
+      try {
+        const res = await fetch("https://apz-chain.github.io/downloads/news.json");
+        if (!res.ok) throw new Error("Network error");
+        const data = await res.json();
+        
+        newsList.innerHTML = ""; // پاک کردن
+        data.forEach(item => {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>${item.title || "خبر"}</strong> - ${item.message || ""} <br><small>📅 ${item.date || ""}</small>`;
+          newsList.appendChild(li);
+        });
+      } catch (e) {
+        // در صورت خطا، اخبار پیش‌فرض را نمایش بده
+        newsList.innerHTML = "";
+        FALLBACK_NEWS.forEach(item => {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>${item.title}</strong> - ${item.message} <br><small>📅 ${item.date}</small>`;
+          newsList.appendChild(li);
+        });
+        console.warn("استفاده از اخبار پشتیبان (نتوانست به JSON دسترسی پیدا کند)");
+      }
+    }
+
+    // ---------- اجرا ----------
+    loadLatest();
+    loadNews();
+  </script>
+</body>
+</html>
